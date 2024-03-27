@@ -37,13 +37,15 @@ def load_model_and_predict(weights_file, num_pixels, num_classes):
         plt.imshow(x_test[i].reshape(28, 28), cmap=plt.get_cmap('gray'))
         plt.title(f"Predicted: {predicted_classes[i]}")
         plt.axis('off')
+        # Save the subplot as an image file
+        plt.savefig(f'image_{i}.png')
     plt.show()
 
 # Main function to execute the script
 def main():
     num_pixels = 784  # 28*28 pixels
     num_classes = 10  # 10 digits
-    weights_file = 'mnist_model_weights.h5'  # File to save weights
+    weights_file = 'model_weights.weights.h5'  # File to save weights
 
     # Load the model and make predictions
     load_model_and_predict(weights_file, num_pixels, num_classes)

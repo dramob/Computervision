@@ -2,8 +2,9 @@ import keras
 from keras.datasets import mnist
 from keras.utils import to_categorical
 from keras.models import Sequential
-from keras.layers import Dense
+from keras.layers import Dense ,Conv2D, MaxPooling2D, Dropout, Flatten
 from keras.optimizers import Adam
+
 #####################################################################################################################
 #####################################################################################################################
 
@@ -70,32 +71,17 @@ def trainAndPredictMLP(X_train, Y_train, X_test, Y_test):
 #####################################################################################################################
 #####################################################################################################################
 def CNN_model(input_shape, num_classes):
-
-    # TODO - Application 2 - Step 5a - Initialize the sequential model
-    model = None   #Modify this
-
-
-    #TODO - Application 2 - Step 5b - Create the first hidden layer as a convolutional layer
-
-
-    #TODO - Application 2 - Step 5c - Define the pooling layer
-
-
-    #TODO - Application 2 - Step 5d - Define the Dropout layer
-
-
-    #TODO - Application 2 - Step 5e - Define the flatten layer
-
-
-    #TODO - Application 2 - Step 5f - Define a dense layer of size 128
-
-
-    #TODO - Application 2 - Step 5g - Define the output layer
-
-
-    #TODO - Application 2 - Step 5h - Compile the model
-
-
+    model = Sequential()
+    #EXERCICE6
+    n=1
+    model.add(Conv2D(32, kernel_size=(n, n), activation='relu', input_shape=input_shape))
+    model.add(MaxPooling2D(pool_size=(2, 2)))
+    model.add(Dropout(0.25))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(num_classes, activation='softmax'))
+    model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
     return model
 #####################################################################################################################
 #####################################################################################################################
@@ -105,27 +91,28 @@ def CNN_model(input_shape, num_classes):
 #####################################################################################################################
 #####################################################################################################################
 def trainAndPredictCNN(X_train, Y_train, X_test, Y_test):
-
-    #TODO - Application 2 - Step 2 - reshape the data to be of size [samples][width][height][channels]
-
-
-    #TODO - Application 2 - Step 3 - normalize the input values from 0-255 to 0-1
-
-
-    #TODO - Application 2 - Step 4 - One hot encoding - Transform the classes labels into a binary matrix
-
-
-    #TODO - Application 2 - Step 5 - Call the cnn_model function
-    model = None   #Modify this
-
-
-    #TODO - Application 2 - Step 6 - Train the model
-
-
-    #TODO - Application 2 - Step 8 - Final evaluation of the model - compute and display the prediction error
-
-
-    return
+    # Reshape data to fit the CNN input requirements
+    X_train = X_train.reshape(X_train.shape[0], 28, 28, 1).astype('float32')
+    X_test = X_test.reshape(X_test.shape[0], 28, 28, 1).astype('float32')
+    
+    # Normalize the input values
+    X_train = X_train / 255
+    X_test = X_test / 255
+    
+    # One-hot encoding
+    Y_train = to_categorical(Y_train)
+    Y_test = to_categorical(Y_test)
+    num_classes = Y_test.shape[1]
+    
+    # Initialize the CNN model
+    model = CNN_model(X_train.shape[1:], num_classes)
+    
+    # Train the model
+    model.fit(X_train, Y_train, validation_data=(X_test, Y_test), epochs=10, batch_size=200, verbose=2)
+    
+    # Evaluate the model
+    scores = model.evaluate(X_test, Y_test, verbose=0)
+    print("CNN Error: {:.2f}%".format(100 - scores[1] * 100))
 #####################################################################################################################
 #####################################################################################################################
 
@@ -135,9 +122,8 @@ def trainAndPredictCNN(X_train, Y_train, X_test, Y_test):
 def main():
     (X_train, Y_train), (X_test, Y_test) = mnist.load_data()
 
-    # Preprocess data if necessary (e.g., normalization, reshaping)
 
-    # Call the MLP training and prediction function
+    # Call the MLP training and prediction function (uncomment to run)
     trainAndPredictMLP(X_train, Y_train, X_test, Y_test)
 
     # Call the CNN training and prediction function
