@@ -1,12 +1,13 @@
 # Application 1 - Step 1 - Import the dependencies
 import numpy as np
-from sklearn.model_selection import KFold
 import keras
-from keras.optimizers import gradient_descent_v2
+from sklearn.model_selection import KFold
+import tensorflow as tf
+from keras.optimizers import SGD
 from keras.datasets import fashion_mnist
-from keras.utils import np_utils
+from keras.utils import to_categorical
 from keras import layers
-from matplotlib import pyplot
+from matplotlib import pyplot 
 import cv2
 #####################################################################################################################
 #####################################################################################################################
@@ -42,14 +43,17 @@ def summarizeLearningCurvesPerformances(histories, accuracyScores):
 #####################################################################################################################
 def prepareData(trainX, trainY, testX, testY):
 
-    #TODO - Application 1 - Step 4a - reshape the data to be of size [samples][width][height][channels]
+    # Application 1 - Step 4a - reshape the data to be of size [samples][width][height][channels]
+    trainX = trainX.reshape((trainX.shape[0], 28, 28, 1))
+    testX = testX.reshape((testX.shape[0], 28, 28, 1))
 
+    # Application 1 - Step 4b - normalize the input values
+    trainX = trainX.astype('float32') / 255.0
+    testX = testX.astype('float32') / 255.0
 
-    #TODO - Application 1 - Step 4b - normalize the input values
-
-
-    #TODO - Application 1 - Step 4c - Transform the classes labels into a binary matrix
-
+    # Application 1 - Step 4c - Transform the classes labels into a binary matrix
+    trainY = to_categorical(trainY)
+    testY = to_categorical(testY)
 
     return trainX, trainY, testX, testY
 #####################################################################################################################
@@ -61,26 +65,28 @@ def prepareData(trainX, trainY, testX, testY):
 #####################################################################################################################
 def defineModel(input_shape, num_classes):
 
-    #TODO - Application 1 - Step 6a - Initialize the sequential model
-    model = None   #Modify this
+    # Application 1 - Step 6a - Initialize the sequential model
+    model = keras.Sequential()
 
-    #TODO - Application 1 - Step 6b - Create the first hidden layer as a convolutional layer
+    # Application 1 - Step 6b - Create the first hidden layer as a convolutional layer
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_uniform', input_shape=input_shape))
 
+    # Application 1 - Step 6c - Define the pooling layer
+    model.add(layers.MaxPooling2D((2, 2)))
 
-    #TODO - Application 1 - Step 6c - Define the pooling layer
+    # Application 1 - Step 6d - Define the flatten layer
+    model.add(layers.Flatten())
 
+    # Application 1 - Step 6e - Define a dense layer of size 16
+    model.add(layers.Dense(16, activation='relu', kernel_initializer='he_uniform'))
 
-    #TODO - Application 1 - Step 6d - Define the flatten layer
+    # Application 1 - Step 6f - Define the output layer
+    model.add(layers.Dense(num_classes, activation='softmax'))
 
-
-    #TODO - Application 1 - Step 6e - Define a dense layer of size 16
-
-
-    #TODO - Application 1 - Step 6f - Define the output layer
-
-
-    #TODO - Application 1 - Step 6g - Compile the model
-
+    # Application 1 - Step 6g - Compile the model
+    model.compile(optimizer=SGD(learning_rate=0.01, momentum=0.9), 
+                  loss='categorical_crossentropy', 
+                  metrics=['accuracy'])
 
     return model
 #####################################################################################################################
@@ -92,16 +98,17 @@ def defineModel(input_shape, num_classes):
 #####################################################################################################################
 def defineTrainAndEvaluateClassic(trainX, trainY, testX, testY):
 
-    #TODO - Application 1 - Step 6 - Call the defineModel function
+    # Application 1 - Step 6 - Call the defineModel function
+    model = defineModel((28, 28, 1), 10)
 
+    # Application 1 - Step 7 - Train the model
+    history = model.fit(trainX, trainY, epochs=5, batch_size=32, validation_data=(testX, testY), verbose=2)
 
-    #TODO - Application 1 - Step 7 - Train the model
+    # Application 1 - Step 8 - Evaluate the model
+    _, accuracy = model.evaluate(testX, testY, verbose=0)
+    print(f'Accuracy: {accuracy*100:.2f}%')
 
-
-    #TODO - Application 1 - Step 8 - Evaluate the model
-
-
-    return
+    return history, accuracy
 #####################################################################################################################
 #####################################################################################################################
 
@@ -119,25 +126,24 @@ def defineTrainAndEvaluateKFolds(trainX, trainY, testX, testY):
     kfold = KFold(k_folds, shuffle=True, random_state=1)
 
     for train_idx, val_idx in kfold.split(trainX):
+        # Application 2 - Step 3 - Select data for train and validation
+        trainX_fold, trainY_fold = trainX[train_idx], trainY[train_idx]
+        valX_fold, valY_fold = trainX[val_idx], trainY[val_idx]
 
-        #TODO - Application 2 - Step 3 - Select data for train and validation
+        # Application 2 - Step 4 - Build the model - Call the defineModel function
+        model = defineModel((28, 28, 1), 10)
 
+        # Application 2 - Step 5 - Fit the model
+        history = model.fit(trainX_fold, trainY_fold, epochs=5, batch_size=32, validation_data=(valX_fold, valY_fold), verbose=2)
 
-        #TODO - Application 2 - Step 4 - Build the model - Call the defineModel function
+        # Application 2 - Step 6 - Save the training related information in the histories list
+        histories.append(history)
 
+        # Application 2 - Step 7 - Evaluate the model on the test dataset
+        _, accuracy = model.evaluate(testX, testY, verbose=0)
 
-        #TODO - Application 2 - Step 5 - Fit the model
-
-
-        #TODO - Application 2 - Step 6 - Save the training related information in the histories list
-
-
-        #TODO - Application 2 - Step 7 - Evaluate the model on the test dataset
-
-
-        #TODO - Application 2 - Step 8 - Save the accuracy in the accuracyScores list
-
-        pass #DELETE THIS!
+        # Application 2 - Step 8 - Save the accuracy in the accuracyScores list
+        accuracyScores.append(accuracy)
 
     return histories, accuracyScores
 #####################################################################################################################
@@ -149,33 +155,20 @@ def defineTrainAndEvaluateKFolds(trainX, trainY, testX, testY):
 #####################################################################################################################
 def main():
 
-    #TODO - Application 1 - Step 2 - Load the Fashion MNIST dataset in Keras
+    # Application 1 - Step 2 - Load the Fashion MNIST dataset in Keras
+    (trainX, trainY), (testX, testY) = fashion_mnist.load_data()
 
+    # Application 1 - Step 3 - Print the size of the train/test dataset
+    print(f'Training data shape: {trainX.shape}, Training labels shape: {trainY.shape}')
+    print(f'Test data shape: {testX.shape}, Test labels shape: {testY.shape}')
 
-    #TODO - Application 1 - Step 3 - Print the size of the train/test dataset
+    # Application 1 - Step 4 - Call the prepareData method
+    trainX, trainY, testX, testY = prepareData(trainX, trainY, testX, testY)
 
+    # Application 1 - Step 5 - Define, train and evaluate the model in the classical way
+    history, accuracy = defineTrainAndEvaluateClassic(trainX, trainY, testX, testY)
 
-    #TODO - Application 1 - Step 4 - Call the prepareData method
+    # Application 2 - Step 1 - Define, train and evaluate the model using K-Folds strategy
+    histories, accuracyScores = defineTrainAndEvaluateKFolds(trainX, trainY, testX, testY)
 
-
-    #TODO - Application 1 - Step 5 - Define, train and evaluate the model in the classical way
-
-
-    #TODO - Application 2 - Step 1 - Define, train and evaluate the model using K-Folds strategy
-
-
-    #TODO - Application 2 - Step9 - System performance presentation
-
-
-    return
-#####################################################################################################################
-#####################################################################################################################
-
-
-
-#####################################################################################################################
-#####################################################################################################################
-if __name__ == '__main__':
-    main()
-#####################################################################################################################
-#####################################################################################################################
+    # Application 2
