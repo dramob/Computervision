@@ -83,51 +83,25 @@ def prepareDatabase(original_directory, base_directory):
 #####################################################################################################################
 #####################################################################################################################
 def defineCNNModelFromScratch():
-
-    #Application 1 - Step 3a - Initialize the sequential model
     model = models.Sequential()
-
-    #TODO - Application 1 - Step 3b - Create the first hidden layer as a convolutional layer
-    model.add(layers.Conv2D(filters=32, kernel_size=(3, 3), input_shape=(150, 150, 3),activation='relu'))
-
-    #TODO - Application 1 - Step 3c - Define a maxpooling layer
-    model.add(layers.MaxPooling2D(pool_size=(2, 2)))
-
-    #TODO - Application 1 - Step 3d - Create the third hidden layer as a convolutional layer
-
-
-    #TODO - Application 1 - Step 3e - Define a pooling layer
-
-
-    #TODO - Application 1 - Step 3f - Create another convolutional layer
-
-
-    #TODO - Application 1 - Step 3g - Define a pooling layer
-
-
-    #TODO - Application 1 - Step 3h - Create another convolutional layer
-
-
-    #TODO - Application 1 - Step 3i - Define a pooling layer
-
-
-    #TODO - Application 1 - Step 3j - Define the flatten layer
+    model.add(layers.Conv2D(32, (3, 3), activation='relu', input_shape=(150, 150, 3)))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(64, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
+    model.add(layers.Conv2D(128, (3, 3), activation='relu'))
+    model.add(layers.MaxPooling2D((2, 2)))
     model.add(layers.Flatten())
-    #model.add(layers.Dropout(rate=0.5))
-    #TODO - Application 1 - Step 3k - Define a dense layer of size 512
     model.add(layers.Dense(512, activation='relu'))
-
-    #TODO - Application 1 - Step 3l - Define the output layer
     model.add(layers.Dense(1, activation='sigmoid'))
 
-    #TODO - Application 1 - Step 3m - Visualize the network arhitecture (list of layers)
+    # Update here: change 'lr' to 'learning_rate'
+    model.compile(loss='binary_crossentropy', optimizer=RMSprop(learning_rate=1e-4), metrics=['accuracy'])
     model.summary()
 
-
-    #TODO - Application 1 - Step 3n - Compile the model
-    model.compile(optimizer=RMSprop(learning_rate=0.0001), loss='binary_crossentropy', metrics=['accuracy'])
-
     return model
+
 #####################################################################################################################
 #####################################################################################################################
 
@@ -179,19 +153,18 @@ def defineCNNModelVGGPretrained():
 #####################################################################################################################
 #####################################################################################################################
 def imagePreprocessing(base_directory):
+    train_dir = os.path.join(base_directory, 'train')
+    validation_dir = os.path.join(base_directory, 'validation')
+    test_dir = os.path.join(base_directory, 'test')
 
-    train_directory = base_directory + '/train'
-    validation_directory = base_directory + '/validation'
+    train_datagen = ImageDataGenerator(rescale=1./255, rotation_range=40, width_shift_range=0.2, height_shift_range=0.2, shear_range=0.2, zoom_range=0.2, horizontal_flip=True,)
+    test_datagen = ImageDataGenerator(rescale=1./255)  # Only rescaling for validation and test sets
 
-    #TODO - Application 1 - Step 2 - Create the image data generators for train and validation
+    train_generator = train_datagen.flow_from_directory(train_dir, target_size=(150, 150), batch_size=20, class_mode='binary')
+    validation_generator = test_datagen.flow_from_directory(validation_dir, target_size=(150, 150), batch_size=20, class_mode='binary')
 
+    return train_generator, validation_generator
 
-
-    #TODO - Application 1 - Step 2 - Analyze the output of the train and validation generators
-
-
-
-    # return train_generator, validation_generator    #Uncomment this
 #####################################################################################################################
 #####################################################################################################################
 
@@ -205,25 +178,15 @@ def main():
     original_directory = "./Kaggle_Cats_And_Dogs_Dataset"
     base_directory = "./Kaggle_Cats_And_Dogs_Dataset_Small"
 
-    #TODO - Application 1 - Step 1 - Prepare the dataset
 
-    prepareDatabase(original_directory, base_directory)
+   # prepareDatabase(original_directory, base_directory)
+    
+    train_generator, validation_generator = imagePreprocessing(base_directory)
+    model = defineCNNModelFromScratch()
 
+    history = model.fit(train_generator, steps_per_epoch=100, epochs=30, validation_data=validation_generator, validation_steps=50)
 
-    #TODO - Application 1 - Step 2 - Call the imagePreprocessing method
-
-
-    #TODO - Application 1 - Step 3 - Call the method that creates the CNN model
-
-
-
-    #TODO - Application 1 - Step 4 - Train the model
-
-
-
-    #TODO - Application 1 - Step 5 - Visualize the system performance using the diagnostic curves
-
-
+    visualizeTheTrainingPerformances(history, "CNN_From_Scratch")
 
     return
 #####################################################################################################################
