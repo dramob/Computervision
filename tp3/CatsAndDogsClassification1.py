@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import tensorflow
 from tensorflow.keras import layers
 from tensorflow.keras import models
