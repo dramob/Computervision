@@ -1,4 +1,5 @@
-# Import necessary libraries
+ #!/usr/bin/env python3
+
 import tensorflow as tf
 from tensorflow.keras import layers, models
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
