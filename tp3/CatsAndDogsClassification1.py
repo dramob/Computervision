@@ -104,47 +104,42 @@ def defineCNNModelFromScratch():
 
 #####################################################################################################################
 #####################################################################################################################
-
-
-#####################################################################################################################
-#####################################################################################################################
 def defineCNNModelVGGPretrained():
+    # Step 1 - Load the pretrained VGG16 network
+    baseModel = VGG16(input_shape=(150, 150, 3), include_top=False, weights="imagenet")
 
-    #TODO - Application 2 - Step 1 - Load the pretrained VGG16 network in a variable called baseModel
-    #The top layers will be omitted; The input_shape will be kept to (150, 150, 3)
-	#baseModel = VGG16(input_shape=(150, 150, 3), include_top=False, weights="imagenet")
-
-    #TODO - Application 2 - Step 2 -  Visualize the network arhitecture (list of layers)
-
-
-    #TODO - Application 2 - Step 3 -  Freeze the baseModel convolutional layers in order not to allow training
-	#for layer in baseModel.layers:
-        #layer.trainable = False
-
-    #baseModel.summary()
-
-    #TODO - Application 2 - Step 4 - Create the final model and add the layers from the baseModel
+    # Step 2 - Visualize the network architecture
+    print("Base model architecture:")
+    baseModel.summary()
+    
+    # Step 3 - Freeze the convolutional layers
+    for layer in baseModel.layers:
+        layer.trainable = False
+    
+    # Step 4 - Create the final model
     VGG_model = models.Sequential()
-    #VGG_model.add(baseModel)            #Uncomment this
-
-
-    # TODO - Application 2 - Step 4a - Add the flatten layer
-
-
-    # TODO - Application 2 - Step 4b - Add the dropout layer
-
-
-    # TODO Application 2 - Step 4c - Add a dense layer of size 512
-
-
-    # TODO - Application 2 - Step 4d - Add the output layer
-
-
-    # TODO - Application 2 - Step 4e - Compile the model
-
-
+    VGG_model.add(baseModel)  # Add the base model
+    
+    # Step 4a - Add the flatten layer
+    VGG_model.add(layers.Flatten())
+    
+    # Step 4b - Add the dropout layer
+    VGG_model.add(layers.Dropout(0.5))
+    
+    # Step 4c - Add a dense layer of size 512
+    VGG_model.add(layers.Dense(512, activation='relu'))
+    
+    # Step 4d - Add the output layer
+    VGG_model.add(layers.Dense(1, activation='sigmoid'))  # Binary classification (cat or dog)
+    
+    # Step 4e - Compile the model
+    VGG_model.compile(optimizer=RMSprop(learning_rate=2e-5), loss='binary_crossentropy', metrics=['accuracy'])
+    
     return VGG_model
+
 #####################################################################################################################
+#####################################################################################################################
+##################################################################################################################
 #####################################################################################################################
 
 
@@ -174,21 +169,27 @@ def imagePreprocessing(base_directory):
 #####################################################################################################################
 #####################################################################################################################
 def main():
-
     original_directory = "./Kaggle_Cats_And_Dogs_Dataset"
     base_directory = "./Kaggle_Cats_And_Dogs_Dataset_Small"
-
-
-   # prepareDatabase(original_directory, base_directory)
-    
+    #prepareDatabase(original_directory,base_directory)
     train_generator, validation_generator = imagePreprocessing(base_directory)
     model = defineCNNModelFromScratch()
 
-    history = model.fit(train_generator, steps_per_epoch=100, epochs=30, validation_data=validation_generator, validation_steps=50)
+    # Calculate steps_per_epoch and validation_steps
+    num_train_samples = train_generator.samples
+    num_validation_samples = validation_generator.samples
+    batch_size = train_generator.batch_size  # Assuming train and validation batch sizes are the same
+
+    history = model.fit(
+        train_generator,
+        steps_per_epoch=None,
+        epochs=30,  # Adjusted for testing
+        validation_data=validation_generator,
+        validation_steps=None,
+    )
 
     visualizeTheTrainingPerformances(history, "CNN_From_Scratch")
 
-    return
 #####################################################################################################################
 #####################################################################################################################
 
