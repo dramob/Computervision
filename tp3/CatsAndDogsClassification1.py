@@ -184,10 +184,10 @@ def main():
 
     history = model.fit(
         train_generator,
-        steps_per_epoch=None,
+        steps_per_epoch=10,
         epochs=30,  # Adjusted for testing
         validation_data=validation_generator,
-        validation_steps=None,
+        validation_steps=10,
     )
 
     visualizeTheTrainingPerformances(history, "CNN_From_Scratch")
