@@ -97,19 +97,22 @@ def run_experiments():
         print(f"Running experiment: Dropout={with_dropout}, Data Augmentation={use_augmentation}")
         model = define_model(with_dropout=with_dropout)
         train_generator, validation_generator = setup_data_generators(use_augmentation=use_augmentation)
+        
+        # Calculate steps based on the actual dataset size
+
+        # Run training
         history = model.fit(
             train_generator,
-            epochs=100,  # Adjust based on your needs
+            epochs=100,  
+            steps_per_epoch=60,
             validation_data=validation_generator,
-            validation_steps=50,  # Adjust based on your validation data
-            steps_per_epoch=100  # Adjust based on your training data
+            validation_steps=50
         )
+        
         title_suffix = f"Dropout={with_dropout} Augmentation={use_augmentation}"
         visualizeTheTrainingPerformance(history, title_suffix)
-        # Optionally, save the model
         model.save(f'model_dropout={with_dropout}_augmentation={use_augmentation}.h5')
-        del model  # Ensure the model is deleted to free up GPU memory
+        del model 
         tf.keras.backend.clear_session()
-
 if __name__ == '__main__':
     run_experiments()
