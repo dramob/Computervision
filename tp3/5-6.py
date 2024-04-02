@@ -50,10 +50,10 @@ def compile_and_train_model(model, train_generator, validation_generator, epochs
     model.compile(loss='binary_crossentropy', optimizer=optimizers.RMSprop(learning_rate=2e-5), metrics=['accuracy'])
     
     history = model.fit(train_generator,
-                        steps_per_epoch=20,
+                        steps_per_epoch=100,
                         epochs=epochs,
                         validation_data=validation_generator,
-                        validation_steps=30,
+                        validation_steps=100,
                         )
     
     return model, history
